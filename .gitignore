@@ -1,0 +1,12 @@
+# ignore temporary object files
+*.obj
+*.lst
+
+# ignore compiler executables 
+*.exe
+
+# ignore folder view configuration files
+.DS_Store
+.AppleDouble
+.LSOverride
+
