@@ -7,6 +7,8 @@
 ; Verify: open msgbox.exe in PE-bear
 
 ; DOS header bytes (64 bytes)
+;-----------------------------
+
 db      0x4D, 0x5A ; MZ magic number (2 bytes)
 dw      0x00       ; e_blp  bytes on last page of file (2 bytes)
 dw      0x00       ; e_cp   Pages in file (2 bytes)
@@ -25,6 +27,14 @@ times 4 dw  0x0000     ; e_res[4] Reserved word (8 bytes)
 dw      0x0000     ; e_oemid OEM identifier (2 bytes)
 dw      0x0000     ; o_eminfo OEM information (2 bytes)
 times 10 dw  0x0000     ; e_res2 (20 bytes)
-dd      0x00000040 ; e_lfanew Offset to NT header (4 bytes)
+dd      0x00000080 ; e_lfanew Offset to NT header - 128 bytes offset (4 bytes)
 
-; PE SIGNATURE & FILE HEADER (IMAGE_NT_HEADERS  )
+; DOS STUB (64 bytes) - I wrote both cases for reference
+;-------------------------------------------------------
+
+db      "This program must be run under Win32."
+times 27 db 0x00
+; times 64 db 0x00   ; Stub of pure zeros
+
+; PE SIGNATURE & FILE HEADER (IMAGE_NT_HEADERS)
+;-----------------------------------------------
