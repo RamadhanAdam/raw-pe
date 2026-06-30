@@ -40,4 +40,13 @@ times 27 db 0x00
 ;-----------------------------------------------
 
 ; Signature (4 bytes)
-dd      0x00004550 ;"PE\0\0" Identifies file image
+dd      0x00004550  ;"PE\0\0" Identifies file image 
+
+; File Header (20 bytes)
+dw      0x8664      ; Machine : AMD64 (64) (2 bytes)
+dw      0x0001      ; Number of sections 1 (2 bytes)
+dd      0x6A443E92  ; TimeDateStamp ( 4 bytes)
+dd      0x00000000  ; PointerToSymbolTable (4 bytes)
+dd      0x00000000  ; NumberOfSymbols (4 bytes)
+dw      0x00F0      ; SizeOfOptionalHeader (2 bytes) = 24 (standard) + 88 (Windows-specific) + 128 (16 data directories × 8 bytes)
+dw      0x0223      ; Characteristics: RELOCS_STRIPPED | EXECUTABLE_IMAGE | LARGE_ADDRESS_AWARE | DEBUG_STRIPPED
