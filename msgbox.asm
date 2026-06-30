@@ -36,7 +36,7 @@ db      "This program must be run under Win32."
 times 27 db 0x00
 ; times 64 db 0x00   ; Stub of pure zeros
 
-; PE SIGNATURE & FILE HEADER (IMAGE_NT_HEADERS)
+; PE SIGNATURE & FILE HEADER (IMAGE_NT_HEADERS) (264 bytes)
 ;-----------------------------------------------
 
 ; Signature (4 bytes)
@@ -107,3 +107,16 @@ dd      0x00000000  ; SizeOfUninitializedData - no .bss section (4 bytes)
 ; 13 DelayImportDescriptor - delay-loaded imports
 ; 14 CLRRuntimeHeader      - .NET header
 ; 15 Reserved              - must be zero
+
+
+; SECTION HEADERS (40 bytes per entry)
+;-------------------------------------
+db      ".text",0,0,0   ; Name (8 bytes)
+; VirtualSize (4 bytes) [PENDING]
+; VirtualAddress (4 bytes) [PENDING]
+; SizeOfRawData (4 bytes) [PENDING]
+; PointerToRawData (4 bytes) [PENDING]
+times 4 db 0x00         ; PointerToRelocations (4 bytes)
+times 4 db 0x00         ; PointerToLinenumbers (4 bytes)
+dw      0x0000          ; NumberOfRelocations (2 bytes)
+dw      0x0000          ; NumberOfLinenumbers (2 bytes)
