@@ -6,7 +6,7 @@
 ; Assemble : nasm -f bin msgbox.asm -o msgbox.exe
 ; Verify: open msgbox.exe in PE-bear
 
-; DOS header bytes (64 bytes)
+; DOS HEADER (64 bytes)
 ;-----------------------------
 
 db      0x4D, 0x5A ; MZ magic number (2 bytes)
@@ -38,3 +38,6 @@ times 27 db 0x00
 
 ; PE SIGNATURE & FILE HEADER (IMAGE_NT_HEADERS)
 ;-----------------------------------------------
+
+; Signature (4 bytes)
+dd      0x00004550 ;"PE\0\0" Identifies file image
