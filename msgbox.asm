@@ -120,3 +120,9 @@ times 4 db 0x00         ; PointerToRelocations (4 bytes)
 times 4 db 0x00         ; PointerToLinenumbers (4 bytes)
 dw      0x0000          ; NumberOfRelocations (2 bytes)
 dw      0x0000          ; NumberOfLinenumbers (2 bytes)
+
+; SECTION DATA (.text)
+;-------------------------------------
+; Code for the section declared above.
+; Steps: push MessageBoxA args, call MessageBoxA, call ExitProcess.
+; Also holds the import table, hint/name tables, and IAT (single-section build).
