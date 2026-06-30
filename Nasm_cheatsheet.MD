@@ -206,3 +206,16 @@ main:
     add  rsp, 40
     ret
 ```
+
+## PE File Injection References
+
+### IMAGE_FILE_HEADER: Machine & Sections
+```nasm
+; 32-bit x86 Configuration
+dw      0x014C     ; Machine: Intel 386 / x86 (Flipped from 4C 01 in memory)
+dw      0x0001     ; NumberOfSections: 1 section (Flipped from 01 00 in memory)
+
+; 64-bit x64 Configuration
+dw      0x8664     ; Machine: AMD64 / x64 (Flipped from 64 86 in memory)
+dw      0x0001     ; NumberOfSections: 1 section (Flipped from 01 00 in memory)
+```
