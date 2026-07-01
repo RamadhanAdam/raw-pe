@@ -80,7 +80,7 @@ dw 0x0006               ; MajorSubsystemVersion - min subsystem version required
 dw 0x0000               ; MinorSubsystemVersion - min subsystem version required (2 bytes)
 dd 0x00000000           ; Win32VersionValue - reserved, must be 0 (4 bytes)
 dd 0x00004000           ; SizeOfImage - total image size in memory, SectionAlignment-rounded (4 bytes)
-dd 0x00000200           ; SizeOfHeaders - total header size, FileAlignment-rounded (4 bytes)
+dd 0x00000400           ; SizeOfHeaders - total header size, FileAlignment-rounded (4 bytes)
 dd 0x00000000           ; CheckSum - usually 0 for non-driver/non-boot files (4 bytes)
 dw 0x0002               ; Subsystem - e.g. WINDOWS_GUI=2, WINDOWS_CUI=3 (2 bytes)
 dw 0x0000               ; DllCharacteristics - ASLR/DEP-related flags (2 bytes)
@@ -118,7 +118,7 @@ db      ".text",0,0,0   ; Name (8 bytes)
 dd      (code_end - code_start); VirtualSize (4 bytes) 
 dd 0x00001000           ; VirtualAddress: Memory offset where code is loaded in RAM (RVA) (4 bytes)
 dd ((code_end - code_start + 0x1FF) / 0x200) * 0x200   ; SizeOfRawData: Rounds up size to next 512-byte boundary (e.g., 512, 1024, etc.) (4 bytes)
-dd 0x00000200           ; PointerToRawData: File offset on disk where code bytes start
+dd 0x00000400           ; PointerToRawData: File offset on disk where code bytes start
 times 4 db 0x00         ; PointerToRelocations (4 bytes)
 times 4 db 0x00         ; PointerToLinenumbers (4 bytes)
 dw      0x0000          ; NumberOfRelocations (2 bytes)
@@ -130,7 +130,7 @@ db      ".data",0,0,0   ; Name (8 bytes)
 dd (data_end - data_start)      ; VirtualSize: 33 bytes in hex (4 bytes)
 dd      0x00002000      ; VirtualAddress: Memory offset in RAM (RVA) (4 bytes)
 dd ((data_end - data_start + 0x1FF) / 0x200) * 0x200      ; SizeOfRawData: 512 bytes in hex (4 bytes)
-dd      0x00000400      ; PointerToRawData: File offset on disk (4 bytes)
+dd      0x00000600      ; PointerToRawData: File offset on disk (4 bytes)
 times 4 db 0x00         ; PointerToRelocations (4 bytes)
 times 4 db 0x00         ; PointerToLinenumbers (4 bytes)
 dw      0x0000          ; NumberOfRelocations (2 bytes)
@@ -149,13 +149,14 @@ dw      0x0000          ; NumberOfRelocations (2 bytes)
 dw      0x0000          ; NumberOfLinenumbers (2 bytes)
 dd      0xC0000080      ; Characteristics: Read + Write + Uninitialized Data (4 bytes)
 
+; .idata section header (40 bytes)
 db ".idata",0,0   ; Name (8 bytes)
-dd (idata_end - idata_start)                                   ; VirtualSize
-dd 0x00004000                                                   ; VirtualAddress
-dd ((idata_end - idata_start + 0x1FF) / 0x200) * 0x200          ; SizeOfRawData
-dd <next free PointerToRawData>                                 ; needs computing once .bss's on-disk footprint is known
-times 4 db 0x00                                                 ; PointerToRelocations
-times 4 db 0x00                                                 ; PointerToLinenumbers
+dd (idata_end - idata_start)                                     ; VirtualSize
+dd 0x00004000                                                    ; VirtualAddress
+dd ((idata_end - idata_start + 0x1FF) / 0x200) * 0x200           ; SizeOfRawData
+dd 0x00000800                                                    ; PointerToRawData
+times 4 db 0x00                                                  ; PointerToRelocations
+times 4 db 0x00                                                  ; PointerToLinenumbers
 dw 0x0000                                                        ; NumberOfRelocations
 dw 0x0000                                                        ; NumberOfLinenumbers
 dd 0x40000040                                                    ; Characteristics: Initialized Data + Read
