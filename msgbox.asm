@@ -199,6 +199,7 @@ section .idata
 idata_start:                            ; Track start for PE Header calculations
 
 ; --- Import Directory Table: 2 DLLs + 1 null terminator = 3 × 20 = 60 bytes ---
+
 import_dir:
 ; user32.dll entry (20 bytes)
 dd (user32_int - idata_start) + 0x4000     ; OriginalFirstThunk - RVA pointing to user32.dll's INT (4 bytes)
@@ -255,7 +256,7 @@ idata_end:
 ; CODE Section (.text)
 section .text
         global main 
-
+bits 64                     ; 64 bit directive
 code_start:                 ; Track start for PE Header calculations
 
 main: 
