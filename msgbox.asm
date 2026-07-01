@@ -160,7 +160,7 @@ dw 0x0000                                                        ; NumberOfReloc
 dw 0x0000                                                        ; NumberOfLinenumbers
 dd 0x40000040                                                    ; Characteristics: Initialized Data + Read
 
-; SECTIONS (.text, .bss , .data)
+; SECTIONS (.text, .bss , .data, .idata)
 ;-------------------------------------
 
 ; External Windows API
@@ -179,6 +179,65 @@ section .bss
 bss_start:  
     result      resq    1 ; resq because it is 64 bit (quad-word) slot
 bss_end: 
+
+; Import Data (.idata) Section
+;-------------------------------------
+section .idata
+idata_start:                            ; Track start for PE Header calculations
+
+; --- Import Directory Table: 2 DLLs + 1 null terminator = 3 × 20 = 60 bytes ---
+import_dir:
+; user32.dll entry (20 bytes)
+dd (user32_int - idata_start) + 0x4000     ; OriginalFirstThunk - RVA pointing to user32.dll's INT (4 bytes)
+dd 0x00000000                              ; TimeDateStamp - not bound, resolve normally (4 bytes)
+dd 0x00000000                              ; ForwarderChain - unused, no forwarding (4 bytes)
+dd (user32_name - idata_start) + 0x4000    ; Name - RVA to "user32.dll" string (4 bytes)
+dd (user32_iat - idata_start) + 0x4000     ; FirstThunk - RVA to user32.dll's IAT (4 bytes)
+
+; kernel32.dll entry (20 bytes)
+dd (kernel32_int - idata_start) + 0x4000   ; OriginalFirstThunk - RVA pointing to kernel32.dll's INT
+dd 0x00000000                              ; TimeDateStamp - not bound
+dd 0x00000000                              ; ForwarderChain - unused
+dd (kernel32_name - idata_start) + 0x4000  ; Name - RVA to "kernel32.dll" string
+dd (kernel32_iat - idata_start) + 0x4000   ; FirstThunk - RVA to kernel32.dll's IAT
+
+times 5 dd 0   ; null terminator entry - marks end of DLL list (20 bytes)
+
+; --- INT per DLL: pointer + null terminator, 8 bytes each (PE32+) ---
+user32_int:
+dq (msgbox_hint - idata_start) + 0x4000    ; points to Hint/Name entry for MessageBoxA - loader knows which function to look up by name
+dq 0x0000000000000000                      ; null terminator - end of function list for user32.dll
+
+kernel32_int:
+dq (exitprocess_hint - idata_start) + 0x4000   ; points to Hint/Name entry for ExitProcess
+dq 0x0000000000000000                          ; null terminator - end of function list for kernel32.dll
+
+; --- IAT per DLL: identical to INT before the loader overwrites it ---
+user32_iat:
+dq (msgbox_hint - idata_start) + 0x4000    ; same as INT pre-load; loader overwrites with real MessageBoxA address at runtime
+dq 0x0000000000000000                      ; null terminator
+
+kernel32_iat:
+dq (exitprocess_hint - idata_start) + 0x4000   ; same as INT pre-load; loader overwrites with real ExitProcess address at runtime
+dq 0x0000000000000000                          ; null terminator
+
+; --- Hint/Name entries: 2-byte hint + null-terminated ASCII name ---
+msgbox_hint:
+dw 0x0000       ; hint - 2 byte optional optimization suggests where to start searching that table by number, so the loader can skip straight there instead of doing a full name-string comparison against every export. 0 means "no hint, just do a normal name lookup" — correct and safe, just slightly slower than a real hint would be. It's 2 bytes because that's the fixed struct size for this field, regardless of the actual ordinal.
+db "MessageBoxA", 0
+
+exitprocess_hint:
+dw 0x0000       ; hint - 0 = no hint, normal name lookup
+db "ExitProcess", 0
+
+; --- DLL name strings ---
+user32_name:
+db "user32.dll", 0
+
+kernel32_name:
+db "kernel32.dll", 0
+
+idata_end:                             
 
 ; CODE Section (.text)
 section .text
