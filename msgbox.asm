@@ -79,7 +79,7 @@ dw 0x0000               ; MinorImageVersion - version of your own image, cosmeti
 dw 0x0006               ; MajorSubsystemVersion - min subsystem version required (2 bytes)
 dw 0x0000               ; MinorSubsystemVersion - min subsystem version required (2 bytes)
 dd 0x00000000           ; Win32VersionValue - reserved, must be 0 (4 bytes)
-dd 0x00004000           ; SizeOfImage - total image size in memory, SectionAlignment-rounded (4 bytes)
+dd 0x00005000           ; SizeOfImage - total image size in memory, SectionAlignment-rounded (4 bytes)
 dd 0x00000400           ; SizeOfHeaders - total header size, FileAlignment-rounded (4 bytes)
 dd 0x00000000           ; CheckSum - usually 0 for non-driver/non-boot files (4 bytes)
 dw 0x0002               ; Subsystem - e.g. WINDOWS_GUI=2, WINDOWS_CUI=3 (2 bytes)
