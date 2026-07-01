@@ -177,25 +177,67 @@ dw 0x0000                                                        ; NumberOfReloc
 dw 0x0000                                                        ; NumberOfLinenumbers
 dd 0x40000040                                                    ; Characteristics: Initialized Data + Read
 
+times (0x400 - ($ - $$)) db 0   ; pad file up to .data's PointerToRawData (0x400)
+
 ; SECTIONS (.text, .bss , .data, .idata)
 ;-------------------------------------
 
+; CODE Section (.text)
+
+        global main 
+bits 64                     ; 64 bit directive
+code_start:                 ; Track start for PE Header calculations
+
+main: 
+        ; --- SETUP REGISTERS & CALL MESSAGEBOXA ---
+        sub rsp, 40         ; 4 bytes - Allocate 32 shadow space + 8 alignment pad
+        mov rcx, 0          ; 7 bytes - Argument 1: hWnd = NULL
+        mov rdx, message    ; 7 bytes - Argument 2: lpText (RIP-relative pointer)
+        mov r8,  title      ; 7 bytes - Argument 3: lpCaption (RIP-relative pointer)
+        mov r9,  4          ; 7 bytes - Argument 4: uType = MB_YESNO
+        call [rel user32_iat]   ; 5 bytes
+        add rsp, 40         ; 4 bytes - Free stack space
+
+        ; --- EVALUATE USER CLICK ---
+        mov [result], rax   ; 7 bytes - Save 64-bit return value to BSS slot
+        cmp eax, 6          ; 3 bytes - Check if return value matches IDYES (6)
+        je  yes_branch      ; 2 bytes - Jump to success logic if equal
+
+        ; --- "NO" BRANCH ---
+        sub rsp, 40         ; 4 bytes - Reallocate space for next API call
+        mov rcx, 1          ; 7 bytes - Argument 1: Exit code 1 (Failure/No)
+        call [rel kernel32_iat]    ; 5 bytes
+
+    yes_branch:
+        ; --- "YES" BRANCH ---
+        sub rsp, 40         ; 4 bytes - Reallocate space for next API call
+        mov rcx, 0          ; 7 bytes - Argument 1: Exit code 0 (Success/Yes)
+        call [rel kernel32_iat]    ; 5 bytes
+
+code_end:                   ; Track end for PE Header calculations
+
+times (0x600 - ($ - $$)) db 0   ; pad file up to .data's PointerToRawData (0x600)
+
 ; Data Section (Initialized variables) (33 bytes)
-section .data 
+
 data_start: 
     title       db "Confirm", 0 ; 0 for null byte at the end of a string ( 8 bytes)
     message     db "Do you want to continue?", 0 ; (25 bytes)
 data_end: 
 
 ; BSS Section (Block Started by Symbol) Uninitialized RAM Reservation (0 bytes disk / 8 bytes RAM - reserved space)
-section .bss  
+ 
+; bss_start:  
+;     result      resq    1 ; resq because it is 64 bit (quad-word) slot
+; bss_end: 
 bss_start:  
-    result      resq    1 ; resq because it is 64 bit (quad-word) slot
-bss_end: 
+    result      dq 0    ; explicit 8-byte zero, no warning
+bss_end:
 
 ; Import Data (.idata) Section
 ;-------------------------------------
-section .idata
+
+times (0x800 - ($ - $$)) db 0   ; pad file up to .data's PointerToRawData (0x800)
 idata_start:                            ; Track start for PE Header calculations
 
 ; --- Import Directory Table: 2 DLLs + 1 null terminator = 3 × 20 = 60 bytes ---
@@ -252,37 +294,4 @@ kernel32_name:
 db "kernel32.dll", 0
 
 idata_end:                             
-
-; CODE Section (.text)
-section .text
-        global main 
-bits 64                     ; 64 bit directive
-code_start:                 ; Track start for PE Header calculations
-
-main: 
-        ; --- SETUP REGISTERS & CALL MESSAGEBOXA ---
-        sub rsp, 40         ; 4 bytes - Allocate 32 shadow space + 8 alignment pad
-        mov rcx, 0          ; 7 bytes - Argument 1: hWnd = NULL
-        mov rdx, message    ; 7 bytes - Argument 2: lpText (RIP-relative pointer)
-        mov r8,  title      ; 7 bytes - Argument 3: lpCaption (RIP-relative pointer)
-        mov r9,  4          ; 7 bytes - Argument 4: uType = MB_YESNO
-        call [rel user32_iat]   ; 5 bytes
-        add rsp, 40         ; 4 bytes - Free stack space
-
-        ; --- EVALUATE USER CLICK ---
-        mov [result], rax   ; 7 bytes - Save 64-bit return value to BSS slot
-        cmp eax, 6          ; 3 bytes - Check if return value matches IDYES (6)
-        je  yes_branch      ; 2 bytes - Jump to success logic if equal
-
-        ; --- "NO" BRANCH ---
-        sub rsp, 40         ; 4 bytes - Reallocate space for next API call
-        mov rcx, 1          ; 7 bytes - Argument 1: Exit code 1 (Failure/No)
-        call [rel kernel32_iat]    ; 5 bytes
-
-    yes_branch:
-        ; --- "YES" BRANCH ---
-        sub rsp, 40         ; 4 bytes - Reallocate space for next API call
-        mov rcx, 0          ; 7 bytes - Argument 1: Exit code 0 (Success/Yes)
-        call [rel kernel32_iat]    ; 5 bytes
-
-code_end:                   ; Track end for PE Header calculations
+times (0xA00 - ($ - $$)) db 0   ; pad file out to .idata's full SizeOfRawData (0x200)
