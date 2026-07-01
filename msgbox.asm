@@ -48,7 +48,7 @@ dd      0x00004550  ;"PE\0\0" Identifies file image
 ; ----------------------
 
 dw      0x8664      ; Machine : AMD64 (64) (2 bytes)
-dw      0x0001      ; Number of sections 1 (2 bytes)
+dw      0x0004      ; Number of sections 4 (2 bytes)
 dd      0x6A443E92  ; TimeDateStamp ( 4 bytes)
 dd      0x00000000  ; PointerToSymbolTable (4 bytes)
 dd      0x00000000  ; NumberOfSymbols (4 bytes)
@@ -149,6 +149,16 @@ dw      0x0000          ; NumberOfRelocations (2 bytes)
 dw      0x0000          ; NumberOfLinenumbers (2 bytes)
 dd      0xC0000080      ; Characteristics: Read + Write + Uninitialized Data (4 bytes)
 
+db ".idata",0,0   ; Name (8 bytes)
+dd (idata_end - idata_start)                                   ; VirtualSize
+dd 0x00004000                                                   ; VirtualAddress
+dd ((idata_end - idata_start + 0x1FF) / 0x200) * 0x200          ; SizeOfRawData
+dd <next free PointerToRawData>                                 ; needs computing once .bss's on-disk footprint is known
+times 4 db 0x00                                                 ; PointerToRelocations
+times 4 db 0x00                                                 ; PointerToLinenumbers
+dw 0x0000                                                        ; NumberOfRelocations
+dw 0x0000                                                        ; NumberOfLinenumbers
+dd 0x40000040                                                    ; Characteristics: Initialized Data + Read
 
 ; SECTIONS (.text, .bss , .data)
 ;-------------------------------------
