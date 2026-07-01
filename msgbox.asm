@@ -249,7 +249,7 @@ main:
         mov rdx, message    ; 7 bytes - Argument 2: lpText (RIP-relative pointer)
         mov r8,  title      ; 7 bytes - Argument 3: lpCaption (RIP-relative pointer)
         mov r9,  4          ; 7 bytes - Argument 4: uType = MB_YESNO
-        call[rel user32_iat]   ; 5 bytes
+        call [rel user32_iat]   ; 5 bytes
         add rsp, 40         ; 4 bytes - Free stack space
 
         ; --- EVALUATE USER CLICK ---
