@@ -111,6 +111,8 @@ dd      0x00000000  ; SizeOfUninitializedData - no .bss section (4 bytes)
 
 ; SECTION HEADERS (40 bytes per entry)
 ;-------------------------------------
+; .text section header (40 bytes)
+
 db      ".text",0,0,0   ; Name (8 bytes)
 dd      (code_end - code_start); VirtualSize (4 bytes) 
 dd 0x00001000           ; VirtualAddress: Memory offset where code is loaded in RAM (RVA) (4 bytes)
@@ -120,13 +122,35 @@ times 4 db 0x00         ; PointerToRelocations (4 bytes)
 times 4 db 0x00         ; PointerToLinenumbers (4 bytes)
 dw      0x0000          ; NumberOfRelocations (2 bytes)
 dw      0x0000          ; NumberOfLinenumbers (2 bytes)
-dd 0x60000020           ; Characteristics (4 bytes)
+dd      0x60000020      ; Characteristics (4 bytes)
 
-; SECTIONS (.text, .bss , .code)
+; .data section header (40 bytes)
+db      ".data",0,0,0   ; Name (8 bytes)
+dd      0x00000021      ; VirtualSize: 33 bytes in hex (4 bytes)
+dd      0x00002000      ; VirtualAddress: Memory offset in RAM (RVA) (4 bytes)
+dd      0x00000200      ; SizeOfRawData: 512 bytes in hex (4 bytes)
+dd      0x00000400      ; PointerToRawData: File offset on disk (4 bytes)
+times 4 db 0x00         ; PointerToRelocations (4 bytes)
+times 4 db 0x00         ; PointerToLinenumbers (4 bytes)
+dw      0x0000          ; NumberOfRelocations (2 bytes)
+dw      0x0000          ; NumberOfLinenumbers (2 bytes)
+dd      0xC0000040      ; Characteristics: Read + Write + Initialized Data (4 bytes)
+
+; .bss section header (40 bytes)
+db      ".bss",0,0,0,0  ; Name (8 bytes)
+dd      0x00000008      ; VirtualSize: 8 bytes in hex (4 bytes)
+dd      0x00003000      ; VirtualAddress: Memory offset in RAM (RVA) (4 bytes)
+dd      0x00000000      ; SizeOfRawData: 0 bytes on disk (4 bytes)
+dd      0x00000000      ; PointerToRawData: 0 because it doesn't exist on disk (4 bytes)
+times 4 db 0x00         ; PointerToRelocations (4 bytes)
+times 4 db 0x00         ; PointerToLinenumbers (4 bytes)
+dw      0x0000          ; NumberOfRelocations (2 bytes)
+dw      0x0000          ; NumberOfLinenumbers (2 bytes)
+dd      0xC0000080      ; Characteristics: Read + Write + Uninitialized Data (4 bytes)
+
+
+; SECTIONS (.text, .bss , .data)
 ;-------------------------------------
-; Code for the section declared above.
-; Steps: push MessageBoxA args, call MessageBoxA, call ExitProcess.
-; Also holds the import table, hint/name tables, and IAT (single-section build).
 
 ; External Windows API
 extern MessageBoxA
