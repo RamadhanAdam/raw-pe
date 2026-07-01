@@ -126,9 +126,9 @@ dd      0x60000020      ; Characteristics (4 bytes)
 
 ; .data section header (40 bytes)
 db      ".data",0,0,0   ; Name (8 bytes)
-dd      0x00000021      ; VirtualSize: 33 bytes in hex (4 bytes)
+dd (data_end - data_start)      ; VirtualSize: 33 bytes in hex (4 bytes)
 dd      0x00002000      ; VirtualAddress: Memory offset in RAM (RVA) (4 bytes)
-dd      0x00000200      ; SizeOfRawData: 512 bytes in hex (4 bytes)
+dd ((data_end - data_start + 0x1FF) / 0x200) * 0x200      ; SizeOfRawData: 512 bytes in hex (4 bytes)
 dd      0x00000400      ; PointerToRawData: File offset on disk (4 bytes)
 times 4 db 0x00         ; PointerToRelocations (4 bytes)
 times 4 db 0x00         ; PointerToLinenumbers (4 bytes)
@@ -153,14 +153,15 @@ dd      0xC0000080      ; Characteristics: Read + Write + Uninitialized Data (4 
 ;-------------------------------------
 
 ; External Windows API
-extern MessageBoxA
+extern MessageBoxA 
 extern ExitProcess
 
 ; Data Section (Initialized variables) (33 bytes)
 section .data 
+data_start: 
     title       db "Confirm", 0 ; 0 for null byte at the end of a string ( 8 bytes)
     message     db "Do you want to continue?", 0 ; (25 bytes)
-
+data end: 
 ; BSS Section (Block Started by Symbol) Uninitialized RAM Reservation (0 bytes disk / 8 bytes RAM - reserved space)
 section .bss    
     result      resq    1 ; resq because it is 64 bit (quad-word) slot
