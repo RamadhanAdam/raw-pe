@@ -1,8 +1,9 @@
 ; msgbox
 ; Author :  Ramadhan Adam
 ; Educational : this PE is built to understsand PE file internals from scratch.
-; Pops a MessageBox saying " I built this from scratch" then exits.
-; Imports: MessageBoxA (user32.dll), ExitProcess (kernel32.dll)
+; Shows a Yes/No confirmation dialog ("Do you want to continue?") via MessageBoxA,
+; then exits with code 0 (Yes) or 1 (No).
+; Imports: MessageBoxA (user32.dll), ExitProcess (kernel32.dll) - Import Table/IAT pending
 ; Assemble : nasm -f bin msgbox.asm -o msgbox.exe
 ; Verify: open msgbox.exe in PE-bear
 
@@ -61,34 +62,34 @@ dw      0x0223      ; Characteristics: RELOCS_STRIPPED | EXECUTABLE_IMAGE | LARG
 dw      0x020B      ; Magic - 0x20B identifies PE32+ (2 bytes)
 db      0x00        ; MajorLinkerVersion - arbitrary, cosmetic (1 byte)
 db      0x00        ; MinorLinkerVersion - arbitrary, cosmetic (1 byte)
-dd      0x00000200  ; SizeOfCode - total code size, file-aligned (4 bytes) [PLACEHOLDER, fix once code written]
-dd      0x00000000  ; SizeOfInitializedData (4 bytes) [PLACEHOLDER, revisit once import table built]
-dd      0x00000000  ; SizeOfUninitializedData - no .bss section (4 bytes)
-; AddressOfEntryPoint - RVA of first instruction executed (4 bytes) [PENDING - needs section table]
-; BaseOfCode - RVA where code section begins (4 bytes) [PENDING - needs section table]
+dd ((code_end - code_start + 0x1FF) / 0x200) * 0x200  ; SizeOfCode - total code size, file-aligned matches .text SizeOfRawData( 4 bytes) 
+dd ((data_end - data_start + 0x1FF) / 0x200) * 0x200  ; SizeOfInitializedData matches .data SizeOfRawData (4 bytes) 
+dd ((bss_end - bss_start + 0x1FF) / 0x200) * 0x200  ; SizeOfUninitializedData - .bss section (4 bytes)
+dd      0x00001000  ; AddressOfEntryPoint - RVA of first instruction executed (4 bytes) 
+dd      0x00001000  ; BaseOfCode - RVA where code section begins (4 bytes) [PENDING - needs section table]
 
 ; Windows-specific fields (88 bytes)
-; ImageBase - preferred load address in memory (8 bytes, dq, 64-bit)
-; SectionAlignment - alignment of sections in memory, e.g. 0x1000 (4 bytes)
-; FileAlignment - alignment of sections on disk, e.g. 0x200 (4 bytes)
-; MajorOperatingSystemVersion - min OS version required (2 bytes)
-; MinorOperatingSystemVersion - min OS version required (2 bytes)
-; MajorImageVersion - version of your own image, cosmetic (2 bytes)
-; MinorImageVersion - version of your own image, cosmetic (2 bytes)
-; MajorSubsystemVersion - min subsystem version required (2 bytes)
-; MinorSubsystemVersion - min subsystem version required (2 bytes)
-; Win32VersionValue - reserved, must be 0 (4 bytes)
-; SizeOfImage - total image size in memory, SectionAlignment-rounded (4 bytes)
-; SizeOfHeaders - total header size, FileAlignment-rounded (4 bytes)
-; CheckSum - usually 0 for non-driver/non-boot files (4 bytes)
-; Subsystem - e.g. WINDOWS_GUI=2, WINDOWS_CUI=3 (2 bytes)
-; DllCharacteristics - ASLR/DEP-related flags (2 bytes)
-; SizeOfStackReserve - max stack size reserved (8 bytes)
-; SizeOfStackCommit - stack size committed at startup (8 bytes)
-; SizeOfHeapReserve - max default heap size reserved (8 bytes)
-; SizeOfHeapCommit - default heap size committed at startup (8 bytes)
-; LoaderFlags - obsolete, must be 0 (4 bytes)
-; NumberOfRvaAndSizes - count of data directory entries (16) (4 bytes)
+dq 0x0000000140000000   ; ImageBase - preferred load address in memory (8 bytes, dq, 64-bit)
+dd 0x00001000           ; SectionAlignment - alignment of sections in memory, e.g. 0x1000 (4 bytes)
+dd 0x00000200           ; FileAlignment - alignment of sections on disk, e.g. 0x200 (4 bytes)
+dw 0x0000               ; MajorOperatingSystemVersion - min OS version required (2 bytes)
+dw 0x0000               ; MinorOperatingSystemVersion - min OS version required (2 bytes)
+dw 0x0000               ; MajorImageVersion - version of your own image, cosmetic (2 bytes)
+dw 0x0000               ; MinorImageVersion - version of your own image, cosmetic (2 bytes)
+dw 0x0006               ; MajorSubsystemVersion - min subsystem version required (2 bytes)
+dw 0x0000               ; MinorSubsystemVersion - min subsystem version required (2 bytes)
+dd 0x00000000           ; Win32VersionValue - reserved, must be 0 (4 bytes)
+dd 0x00004000           ; SizeOfImage - total image size in memory, SectionAlignment-rounded (4 bytes)
+dd 0x00000200           ; SizeOfHeaders - total header size, FileAlignment-rounded (4 bytes)
+dd 0x00000000           ; CheckSum - usually 0 for non-driver/non-boot files (4 bytes)
+dw 0x0002               ; Subsystem - e.g. WINDOWS_GUI=2, WINDOWS_CUI=3 (2 bytes)
+dw 0x0000               ; DllCharacteristics - ASLR/DEP-related flags (2 bytes)
+dq 0x0000000000100000   ; SizeOfStackReserve - max stack size reserved (8 bytes)
+dq 0x0000000000001000   ; SizeOfStackCommit - stack size committed at startup (8 bytes)
+dq 0x0000000000100000   ; SizeOfHeapReserve - max default heap size reserved (8 bytes)
+dq 0x0000000000001000   ; SizeOfHeapCommit - default heap size committed at startup (8 bytes)       
+dd 0x00000000           ; LoaderFlags - obsolete, must be 0 (4 bytes)
+dd 0x00000010           ; NumberOfRvaAndSizes - count of data directory entries (16) (4 bytes)
 
 ; Data directories (128 bytes = 16 × 8)
 ; 0  ExportTable           - functions this image exports
@@ -138,7 +139,7 @@ dd      0xC0000040      ; Characteristics: Read + Write + Initialized Data (4 by
 
 ; .bss section header (40 bytes)
 db      ".bss",0,0,0,0  ; Name (8 bytes)
-dd      0x00000008      ; VirtualSize: 8 bytes in hex (4 bytes)
+dd      (bss_end - bss_start)      ; VirtualSize: 8 bytes in hex (4 bytes)
 dd      0x00003000      ; VirtualAddress: Memory offset in RAM (RVA) (4 bytes)
 dd      0x00000000      ; SizeOfRawData: 0 bytes on disk (4 bytes)
 dd      0x00000000      ; PointerToRawData: 0 because it doesn't exist on disk (4 bytes)
@@ -161,13 +162,16 @@ section .data
 data_start: 
     title       db "Confirm", 0 ; 0 for null byte at the end of a string ( 8 bytes)
     message     db "Do you want to continue?", 0 ; (25 bytes)
-data end: 
-; BSS Section (Block Started by Symbol) Uninitialized RAM Reservation (0 bytes disk / 8 bytes RAM - reserved space)
-section .bss    
-    result      resq    1 ; resq because it is 64 bit (quad-word) slot
+data_end: 
 
-; CODE SEGMENT (.text)
-segment .text
+; BSS Section (Block Started by Symbol) Uninitialized RAM Reservation (0 bytes disk / 8 bytes RAM - reserved space)
+section .bss  
+bss_start:  
+    result      resq    1 ; resq because it is 64 bit (quad-word) slot
+bss_end: 
+
+; CODE Section (.text)
+section .text
         global main 
 
 code_start:                 ; Track start for PE Header calculations
