@@ -94,7 +94,7 @@ dd 0x00000010           ; NumberOfRvaAndSizes - count of data directory entries 
 ; Data directories (128 bytes = 16 × 8)
 ;  RVA(Address)   Size
 dd 0x00000000, dd 0x00000000   ; 0  ExportTable           - functions this image exports
-dd 0x00000000, dd 0x00000000   ; 1  ImportTable           - functions this image imports [PENDING]
+dd (import_dir - idata_start) + 0x4000, dd 0x0000003C    ; 1  ImportTable - RVA to import_dir, Size 60 bytes (3×20)
 dd 0x00000000, dd 0x00000000   ; 2  ResourceTable         - icons, strings, dialogs, version info
 dd 0x00000000, dd 0x00000000   ; 3  ExceptionTable        - SEH/unwind info (x64)
 dd 0x00000000, dd 0x00000000   ; 4  CertificateTable      - digital signature
@@ -105,7 +105,7 @@ dd 0x00000000, dd 0x00000000   ; 8  GlobalPtr             - global pointer regis
 dd 0x00000000, dd 0x00000000   ; 9  TLSTable              - thread-local storage
 dd 0x00000000, dd 0x00000000   ; 10 LoadConfigTable       - extra loader config
 dd 0x00000000, dd 0x00000000   ; 11 BoundImport           - precomputed import binding info
-dd 0x00000000, dd 0x00000000   ; 12 IAT                   - Import Address Table location/size [PENDING]
+dd (user32_iat - idata_start) + 0x4000,  dd 0x00000020   ; 12 IAT - RVA to user32_iat (first IAT), Size 32 bytes (2 DLLs × 16 bytes)
 dd 0x00000000, dd 0x00000000   ; 13 DelayImportDescriptor - delay-loaded imports
 dd 0x00000000, dd 0x00000000   ; 14 CLRRuntimeHeader      - .NET header
 dd 0x00000000, dd 0x00000000   ; 15 Reserved              - must be zero
