@@ -192,27 +192,31 @@ main:
         ; --- SETUP REGISTERS & CALL MESSAGEBOXA ---
         sub rsp, 40         ; 4 bytes - Allocate 32 shadow space + 8 alignment pad
         mov rcx, 0          ; 7 bytes - Argument 1: hWnd = NULL
-        mov rdx, message    ; 7 bytes - Argument 2: lpText (RIP-relative pointer)
-        mov r8,  title      ; 7 bytes - Argument 3: lpCaption (RIP-relative pointer)
+        mov rdx, 0x140000000 + 0x2000 + (message - data_start)  ; Argument 2: lpText (absolute VA)
+        mov r8,  0x140000000 + 0x2000 + (title - data_start)    ; Argument 3: lpCaption (absolute VA)
         mov r9,  4          ; 7 bytes - Argument 4: uType = MB_YESNO
-        call [rel user32_iat]   ; 5 bytes
+        mov rax, 0x140000000 + 0x4000 + (user32_iat - idata_start)  ; VA of user32 IAT slot
+        call [rax]          ; call through IAT slot (loader-resolved MessageBoxA)
         add rsp, 40         ; 4 bytes - Free stack space
 
         ; --- EVALUATE USER CLICK ---
-        mov [result], rax   ; 7 bytes - Save 64-bit return value to BSS slot
+        mov rcx, 0x140000000 + 0x3000 + (result - bss_start)  ; VA of result slot
+        mov [rcx], rax      ; Save 64-bit return value to BSS slot
         cmp eax, 6          ; 3 bytes - Check if return value matches IDYES (6)
         je  yes_branch      ; 2 bytes - Jump to success logic if equal
 
         ; --- "NO" BRANCH ---
         sub rsp, 40         ; 4 bytes - Reallocate space for next API call
         mov rcx, 1          ; 7 bytes - Argument 1: Exit code 1 (Failure/No)
-        call [rel kernel32_iat]    ; 5 bytes
+        mov rax, 0x140000000 + 0x4000 + (kernel32_iat - idata_start)  ; VA of kernel32 IAT slot
+        call [rax]          ; call through IAT slot (loader-resolved ExitProcess)
 
     yes_branch:
         ; --- "YES" BRANCH ---
         sub rsp, 40         ; 4 bytes - Reallocate space for next API call
         mov rcx, 0          ; 7 bytes - Argument 1: Exit code 0 (Success/Yes)
-        call [rel kernel32_iat]    ; 5 bytes
+        mov rax, 0x140000000 + 0x4000 + (kernel32_iat - idata_start)  ; VA of kernel32 IAT slot
+        call [rax]          ; call through IAT slot (loader-resolved ExitProcess)
 
 code_end:                   ; Track end for PE Header calculations
 
