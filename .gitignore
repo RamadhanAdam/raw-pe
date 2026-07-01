@@ -3,7 +3,7 @@
 *.lst
 
 # ignore compiler executables 
-*.exe
+# *.exe
 
 # ignore folder view configuration files
 .DS_Store
