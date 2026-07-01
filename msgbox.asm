@@ -164,10 +164,6 @@ dd 0x40000040                                                    ; Characteristi
 ; SECTIONS (.text, .bss , .data, .idata)
 ;-------------------------------------
 
-; External Windows API
-extern MessageBoxA 
-extern ExitProcess
-
 ; Data Section (Initialized variables) (33 bytes)
 section .data 
 data_start: 
@@ -253,7 +249,7 @@ main:
         mov rdx, message    ; 7 bytes - Argument 2: lpText (RIP-relative pointer)
         mov r8,  title      ; 7 bytes - Argument 3: lpCaption (RIP-relative pointer)
         mov r9,  4          ; 7 bytes - Argument 4: uType = MB_YESNO
-        call MessageBoxA    ; 5 bytes
+        call[rel user32_iat]   ; 5 bytes
         add rsp, 40         ; 4 bytes - Free stack space
 
         ; --- EVALUATE USER CLICK ---
@@ -264,12 +260,12 @@ main:
         ; --- "NO" BRANCH ---
         sub rsp, 40         ; 4 bytes - Reallocate space for next API call
         mov rcx, 1          ; 7 bytes - Argument 1: Exit code 1 (Failure/No)
-        call ExitProcess    ; 5 bytes
+        call [rel kernel32_iat]    ; 5 bytes
 
     yes_branch:
         ; --- "YES" BRANCH ---
         sub rsp, 40         ; 4 bytes - Reallocate space for next API call
         mov rcx, 0          ; 7 bytes - Argument 1: Exit code 0 (Success/Yes)
-        call ExitProcess    ; 5 bytes
+        call [rel kernel32_iat]    ; 5 bytes
 
 code_end:                   ; Track end for PE Header calculations
