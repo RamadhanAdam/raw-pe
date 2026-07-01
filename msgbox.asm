@@ -63,7 +63,7 @@ dw      0x020B      ; Magic - 0x20B identifies PE32+ (2 bytes)
 db      0x00        ; MajorLinkerVersion - arbitrary, cosmetic (1 byte)
 db      0x00        ; MinorLinkerVersion - arbitrary, cosmetic (1 byte)
 dd ((code_end - code_start + 0x1FF) / 0x200) * 0x200  ; SizeOfCode - total code size, file-aligned matches .text SizeOfRawData( 4 bytes) 
-dd ((data_end - data_start + 0x1FF) / 0x200) * 0x200  ; SizeOfInitializedData matches .data SizeOfRawData (4 bytes) 
+dd (((data_end - data_start + 0x1FF) / 0x200) * 0x200) + (((idata_end - idata_start + 0x1FF) / 0x200) * 0x200)   ; SizeOfInitializedData - .data + .idata (4 bytes) 
 dd ((bss_end - bss_start + 0x1FF) / 0x200) * 0x200  ; SizeOfUninitializedData - .bss section (4 bytes)
 dd      0x00001000  ; AddressOfEntryPoint - RVA of first instruction executed (4 bytes) 
 dd      0x00001000  ; BaseOfCode - RVA where code section begins (4 bytes) [PENDING - needs section table]
