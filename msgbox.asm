@@ -92,23 +92,23 @@ dd 0x00000000           ; LoaderFlags - obsolete, must be 0 (4 bytes)
 dd 0x00000010           ; NumberOfRvaAndSizes - count of data directory entries (16) (4 bytes)
 
 ; Data directories (128 bytes = 16 × 8)
-; 0  ExportTable           - functions this image exports
-; 1  ImportTable           - functions this image imports
-; 2  ResourceTable         - icons, strings, dialogs, version info
-; 3  ExceptionTable        - SEH/unwind info (x64)
-; 4  CertificateTable      - digital signature
-; 5  BaseRelocationTable   - relocation entries
-; 6  Debug                 - debug info pointer
-; 7  Architecture          - reserved, must be zero
-; 8  GlobalPtr             - global pointer register value (unused x86/x64)
-; 9  TLSTable              - thread-local storage
-; 10 LoadConfigTable       - extra loader config
-; 11 BoundImport           - precomputed import binding info
-; 12 IAT                   - Import Address Table location/size
-; 13 DelayImportDescriptor - delay-loaded imports
-; 14 CLRRuntimeHeader      - .NET header
-; 15 Reserved              - must be zero
-
+;  RVA(Address)   Size
+dd 0x00000000, dd 0x00000000   ; 0  ExportTable           - functions this image exports
+dd 0x00000000, dd 0x00000000   ; 1  ImportTable           - functions this image imports [PENDING]
+dd 0x00000000, dd 0x00000000   ; 2  ResourceTable         - icons, strings, dialogs, version info
+dd 0x00000000, dd 0x00000000   ; 3  ExceptionTable        - SEH/unwind info (x64)
+dd 0x00000000, dd 0x00000000   ; 4  CertificateTable      - digital signature
+dd 0x00000000, dd 0x00000000   ; 5  BaseRelocationTable   - relocation entries
+dd 0x00000000, dd 0x00000000   ; 6  Debug                 - debug info pointer
+dd 0x00000000, dd 0x00000000   ; 7  Architecture          - reserved, must be zero
+dd 0x00000000, dd 0x00000000   ; 8  GlobalPtr             - global pointer register value (unused x86/x64)
+dd 0x00000000, dd 0x00000000   ; 9  TLSTable              - thread-local storage
+dd 0x00000000, dd 0x00000000   ; 10 LoadConfigTable       - extra loader config
+dd 0x00000000, dd 0x00000000   ; 11 BoundImport           - precomputed import binding info
+dd 0x00000000, dd 0x00000000   ; 12 IAT                   - Import Address Table location/size [PENDING]
+dd 0x00000000, dd 0x00000000   ; 13 DelayImportDescriptor - delay-loaded imports
+dd 0x00000000, dd 0x00000000   ; 14 CLRRuntimeHeader      - .NET header
+dd 0x00000000, dd 0x00000000   ; 15 Reserved              - must be zero
 
 ; SECTION HEADERS (40 bytes per entry)
 ;-------------------------------------
