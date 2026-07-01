@@ -112,17 +112,65 @@ dd      0x00000000  ; SizeOfUninitializedData - no .bss section (4 bytes)
 ; SECTION HEADERS (40 bytes per entry)
 ;-------------------------------------
 db      ".text",0,0,0   ; Name (8 bytes)
-; VirtualSize (4 bytes) [PENDING]
-; VirtualAddress (4 bytes) [PENDING]
-; SizeOfRawData (4 bytes) [PENDING]
-; PointerToRawData (4 bytes) [PENDING]
+dd      (code_end - code_start); VirtualSize (4 bytes) 
+dd 0x00001000           ; VirtualAddress: Memory offset where code is loaded in RAM (RVA) (4 bytes)
+dd ((code_end - code_start + 0x1FF) / 0x200) * 0x200   ; SizeOfRawData: Rounds up size to next 512-byte boundary (e.g., 512, 1024, etc.) (4 bytes)
+dd 0x00000200           ; PointerToRawData: File offset on disk where code bytes start
 times 4 db 0x00         ; PointerToRelocations (4 bytes)
 times 4 db 0x00         ; PointerToLinenumbers (4 bytes)
 dw      0x0000          ; NumberOfRelocations (2 bytes)
 dw      0x0000          ; NumberOfLinenumbers (2 bytes)
+dd 0x60000020           ; Characteristics (4 bytes)
 
-; SECTION DATA (.text)
+; SECTIONS (.text, .bss , .code)
 ;-------------------------------------
 ; Code for the section declared above.
 ; Steps: push MessageBoxA args, call MessageBoxA, call ExitProcess.
 ; Also holds the import table, hint/name tables, and IAT (single-section build).
+
+; External Windows API
+extern MessageBoxA
+extern ExitProcess
+
+; Data Section (Initialized variables) (33 bytes)
+section .data 
+    title       db "Confirm", 0 ; 0 for null byte at the end of a string ( 8 bytes)
+    message     db "Do you want to continue?", 0 ; (25 bytes)
+
+; BSS Section (Block Started by Symbol) Uninitialized RAM Reservation (0 bytes disk / 8 bytes RAM - reserved space)
+section .bss    
+    result      resq    1 ; resq because it is 64 bit (quad-word) slot
+
+; CODE SEGMENT (.text)
+segment .text
+        global main 
+
+code_start:                 ; Track start for PE Header calculations
+
+main: 
+        ; --- SETUP REGISTERS & CALL MESSAGEBOXA ---
+        sub rsp, 40         ; 4 bytes - Allocate 32 shadow space + 8 alignment pad
+        mov rcx, 0          ; 7 bytes - Argument 1: hWnd = NULL
+        mov rdx, message    ; 7 bytes - Argument 2: lpText (RIP-relative pointer)
+        mov r8,  title      ; 7 bytes - Argument 3: lpCaption (RIP-relative pointer)
+        mov r9,  4          ; 7 bytes - Argument 4: uType = MB_YESNO
+        call MessageBoxA    ; 5 bytes
+        add rsp, 40         ; 4 bytes - Free stack space
+
+        ; --- EVALUATE USER CLICK ---
+        mov [result], rax   ; 7 bytes - Save 64-bit return value to BSS slot
+        cmp eax, 6          ; 3 bytes - Check if return value matches IDYES (6)
+        je  yes_branch      ; 2 bytes - Jump to success logic if equal
+
+        ; --- "NO" BRANCH ---
+        sub rsp, 40         ; 4 bytes - Reallocate space for next API call
+        mov rcx, 1          ; 7 bytes - Argument 1: Exit code 1 (Failure/No)
+        call ExitProcess    ; 5 bytes
+
+    yes_branch:
+        ; --- "YES" BRANCH ---
+        sub rsp, 40         ; 4 bytes - Reallocate space for next API call
+        mov rcx, 0          ; 7 bytes - Argument 1: Exit code 0 (Success/Yes)
+        call ExitProcess    ; 5 bytes
+
+code_end:                   ; Track end for PE Header calculations
